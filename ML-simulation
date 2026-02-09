@@ -1,0 +1,556 @@
+rm(list=ls())
+
+library(xbreed)
+set.seed(13579)
+rep <- 100
+
+rGBLUP_0_gebv_ref <- matrix(nrow=rep,ncol=1)
+mspeGBLUP_0_gebv_ref <- matrix(nrow=rep,ncol=1)
+mapeGBLUP_0_gebv_ref <- matrix(nrow=rep,ncol=1)
+regGBLUP_0_gebv_ref <- matrix(nrow=rep,ncol=1)
+
+rBB_0_gebv_ref <- matrix(nrow=rep,ncol=1)
+mspeBB_0_gebv_ref <- matrix(nrow=rep,ncol=1)
+mapeBB_0_gebv_ref <- matrix(nrow=rep,ncol=1)
+regBB_0_gebv_ref <- matrix(nrow=rep,ncol=1)
+
+rBL_0_gebv_ref <- matrix(nrow=rep,ncol=1)
+mspeBL_0_gebv_ref <- matrix(nrow=rep,ncol=1)
+mapeBL_0_gebv_ref <- matrix(nrow=rep,ncol=1)
+regBL_0_gebv_ref <- matrix(nrow=rep,ncol=1)
+
+rSVM_0_gebv_ref <- matrix(nrow=rep,ncol=1)
+mspeSVM_0_gebv_ref <- matrix(nrow=rep,ncol=1)
+mapeSVM_0_gebv_ref <- matrix(nrow=rep,ncol=1)
+regSVM_0_gebv_ref <- matrix(nrow=rep,ncol=1)
+
+rRF_0_gebv_ref <- matrix(nrow=rep,ncol=1)
+mspeRF_0_gebv_ref <- matrix(nrow=rep,ncol=1)
+mapeRF_0_gebv_ref <- matrix(nrow=rep,ncol=1)
+regRF_0_gebv_ref <- matrix(nrow=rep,ncol=1)
+
+rNN_0_gebv_ref <- matrix(nrow=rep,ncol=1)
+mspeNN_0_gebv_ref <- matrix(nrow=rep,ncol=1)
+mapeNN_0_gebv_ref <- matrix(nrow=rep,ncol=1)
+regNN_0_gebv_ref <- matrix(nrow=rep,ncol=1)
+
+##########
+
+rGBLUP_0_gebv_tst <- matrix(nrow=rep,ncol=1)
+mspeGBLUP_0_gebv_tst <- matrix(nrow=rep,ncol=1)
+mapeGBLUP_0_gebv_tst <- matrix(nrow=rep,ncol=1)
+regGBLUP_0_gebv_tst <- matrix(nrow=rep,ncol=1)
+
+rBB_0_gebv_tst <- matrix(nrow=rep,ncol=1)
+mspeBB_0_gebv_tst <- matrix(nrow=rep,ncol=1)
+mapeBB_0_gebv_tst <- matrix(nrow=rep,ncol=1)
+regBB_0_gebv_tst <- matrix(nrow=rep,ncol=1)
+
+rBL_0_gebv_tst <- matrix(nrow=rep,ncol=1)
+mspeBL_0_gebv_tst <- matrix(nrow=rep,ncol=1)
+mapeBL_0_gebv_tst <- matrix(nrow=rep,ncol=1)
+regBL_0_gebv_tst <- matrix(nrow=rep,ncol=1)
+
+rSVM_0_gebv_tst <- matrix(nrow=rep,ncol=1)
+mspeSVM_0_gebv_tst <- matrix(nrow=rep,ncol=1)
+mapeSVM_0_gebv_tst <- matrix(nrow=rep,ncol=1)
+regSVM_0_gebv_tst <- matrix(nrow=rep,ncol=1)
+
+rRF_0_gebv_tst <- matrix(nrow=rep,ncol=1)
+mspeRF_0_gebv_tst <- matrix(nrow=rep,ncol=1)
+mapeRF_0_gebv_tst <- matrix(nrow=rep,ncol=1)
+regRF_0_gebv_tst <- matrix(nrow=rep,ncol=1)
+
+rNN_0_gebv_tst <- matrix(nrow=rep,ncol=1)
+mspeNN_0_gebv_tst <- matrix(nrow=rep,ncol=1)
+mapeNN_0_gebv_tst <- matrix(nrow=rep,ncol=1)
+regNN_0_gebv_tst <- matrix(nrow=rep,ncol=1)
+
+
+#######################################
+################BEGIN
+for (i in 1:rep){
+cat("Replication:", i,"\n")
+
+##################
+
+genome <- data.frame(matrix(NA, nrow=20, ncol=6))
+names(genome) <- c("chr","len","nmrk","mpos","nqtl","qpos")
+genome$chr <- c(1:20)
+genome$len <- rep(100,20)
+genome$nmrk <- rep(1000,20)
+genome$mpos <- rep("even",20)
+genome$nqtl <- rep(100,20)
+genome$qpos <- rep("rnd",20)
+
+hp <- make_hp(hpsize=300, ng=500, genome=genome, h2=0.2, d2=0, phen_var=1, 
+              mutr=2.5*10^-5, laf=0.5, sel_seq_mrk=0, sel_seq_qtl=0)
+
+mat <- hp$hp_mrk[-1]
+LD <- calc_LD(mat=mat, MAF=0.05, method="adjacent", LD_summary=T)
+
+############# RECENT POPULATION
+
+male_foun <- data.frame(number=100, select="rnd")
+female_foun <- data.frame(number=100, select="rnd")
+
+select <- data.frame(matrix(NA, nrow=2,ncol=2))
+names(select) <- c("size", "type")
+select$size <- c(200,200)
+select$type <- c("rnd","rnd")
+
+rp <- sample_hp(hp_out=hp, Male_founders=male_foun, Female_founders=female_foun,
+                ng=3, litter_size=5, Selection=select)
+
+
+rp$summary_data
+rp$output[[1]]$data
+dim(rp$output[[1]]$data)
+rp$output[[2]]$data
+dim(rp$output[[2]]$data)
+rp$output[[3]]$data
+dim(rp$output[[3]]$data)
+rp$output[[4]]$data
+dim(rp$output[[4]]$data)
+rp$trait
+
+data_ref <- rp$output[[3]]$data
+phen_ref <- as.matrix(rp$output[[3]]$data["phen"])
+tbv_ref <- as.matrix(rp$output[[3]]$data["tbvp"])
+env_ref <- as.matrix(rp$output[[3]]$data["env"])
+
+data_tar <- rp$output[[4]]$data
+phen_tar <- as.matrix(rp$output[[4]]$data["phen"])
+tbv_tar <- as.matrix(rp$output[[4]]$data["tbvp"])
+env_tar <- as.matrix(rp$output[[4]]$data["env"])
+
+
+############ GENOTYPE MATRIX CODING IN 2,1,0 FOR REFERENCE POPULATION
+
+X <- rp$output[[3]]$mrk[,-c(1,2)]
+dim(X)
+
+t<-X[,seq(1,ncol(X))]
+dim(t)
+t1<-t[,-1]
+dim(t1)
+
+s1<-matrix(nrow=nrow(X),ncol=ncol(X)-1)
+for(j in 1:ncol(t1)){
+     s1[,j] <- X[,j]+X[,j+1]
+}
+M <- s1[,seq(1,ncol(s1),by=2)]
+
+M[which(M==2)]<-2
+M[which(M==3)]<-1
+M[which(M==4)]<-0
+dim(M)
+
+##############################################################
+################################### Allele frequency
+
+freq <- colMeans(M)/2
+
+####################################   extract M A F  #####
+
+maf <- ifelse(freq>0.5,1-freq,freq)
+maf.index <- which(maf<0.05)
+length(maf.index)
+M_ref <- M[,-maf.index]
+dim(M_ref)
+
+##########################################################
+############ GENOTYPE MATRIX CODING IN 2,1,0 FOR TARGET POPULATION
+
+X <- rp$output[[4]]$mrk[,-c(1,2)]
+dim(X)
+
+t<-X[,seq(1,ncol(X))]
+dim(t)
+t1<-t[,-1]
+dim(t1)
+
+s1<-matrix(nrow=nrow(X),ncol=ncol(X)-1)
+for(j in 1:ncol(t1)){
+     s1[,j] <- X[,j]+X[,j+1]
+}
+M_target <- s1[,seq(1,ncol(s1),by=2)]
+
+M_target[which(M_target==2)]<-2
+M_target[which(M_target==3)]<-1
+M_target[which(M_target==4)]<-0 
+dim(M_target)
+
+################  exclude MAF 0.05 from target 1
+
+M_target <- M_target[,-maf.index]
+dim(M_target)
+
+
+####################################################################################
+####################### CONSTRUCTION OF RELATIONSHIP MATRIX #########################
+###### ADDITIVE GENOMIC RELATIONSHIP MATRIX
+
+M <- as.matrix(rbind(M_ref,M_target))
+dim(M)
+p <- colMeans(M)/2
+q <- 1-p
+P <- matrix(p, nrow=nrow(M), ncol=ncol(M), byrow=T)
+P <- P*2
+Z <- M - P
+Z <- as.matrix(Z)
+scale_VA <- 2*sum(p*(1-p))
+G <- Z %*% t(Z)/scale_VA
+dim(G)
+
+#################################################################################
+
+phen <- rbind(as.matrix(phen_ref),as.matrix(phen_tar))
+dim(phen)
+n <- length(phen)
+tst <- c(1001:n)
+
+phenNA <- phen
+phenNA[tst] <- NA
+
+library(BGLR)
+nIteration <- 10000
+burnIn <- 1000
+
+library(randomForest)
+library(brnn)
+library(e1071)
+
+##################################################################################
+#################### ADDITIVE 
+################ GBLUP
+
+ETA <- list(list(K=G, model="RKHS"))
+GBLUP.0 <- BGLR(y=phenNA, ETA=ETA, nIter=nIteration, burnIn=burnIn, saveAt="A_")
+##str(GBLUP.0)
+
+GBLUP.gebv.0 <- GBLUP.0$ETA[[1]]$u
+
+######  PEARSON CORRELATION COEFFICIENT
+
+rGBLUP_0_gebv_ref[i] <- cor(tbv_ref,GBLUP.gebv.0[-tst])
+rGBLUP_0_gebv_tst[i] <- cor(tbv_tar,GBLUP.gebv.0[tst])
+
+####### MEAN SQUARED PREDICTION ERROR
+
+mspeGBLUP_0_gebv_ref[i] <- mean((tbv_ref-GBLUP.gebv.0[-tst])^2)
+mspeGBLUP_0_gebv_tst[i] <- mean((tbv_tar-GBLUP.gebv.0[tst])^2)
+
+######## MEAN ABSOLUTE PREDICTION ERROR
+
+mapeGBLUP_0_gebv_ref[i] <- mean(abs(tbv_ref-GBLUP.gebv.0[-tst]))
+mapeGBLUP_0_gebv_tst[i] <- mean(abs(tbv_tar-GBLUP.gebv.0[tst]))
+
+######### BIAS
+
+regGBLUP_0_gebv_refa <- lm(tbv_ref~GBLUP.gebv.0[-tst])
+regGBLUP_0_gebv_refb <- coef(regGBLUP_0_gebv_refa)[-1]
+regGBLUP_0_gebv_ref[i] <- as.numeric(regGBLUP_0_gebv_refb)
+
+regGBLUP_0_gebv_tsta <- lm(tbv_tar~GBLUP.gebv.0[tst])
+regGBLUP_0_gebv_tstb <- coef(regGBLUP_0_gebv_tsta)[-1]
+regGBLUP_0_gebv_tst[i] <- as.numeric(regGBLUP_0_gebv_tstb)
+
+
+################### Bayes B(point of mass at zero + scaled-t slab)
+
+ETA <- list(list(X=Z, model="BayesB"))
+BB.0 <- BGLR(y=phenNA, ETA=ETA, nIter=nIteration, burnIn=burnIn, saveAt="BB_")
+##str(BB.0)
+
+######  PEARSON CORRELATION COEFFICIENT
+
+rBB_0_gebv_ref[i] <- cor(tbv_ref,BB.0$yHat[-tst])
+rBB_0_gebv_tst[i] <- cor(tbv_tar,BB.0$yHat[tst])
+
+####### MEAN SQUARED PREDICTION ERROR
+
+mspeBB_0_gebv_ref[i] <- mean((tbv_ref-BB.0$yHat[-tst])^2)
+mspeBB_0_gebv_tst[i] <- mean((tbv_tar-BB.0$yHat[tst])^2)
+
+######## MEAN ABSOLUTE PREDICTION ERROR
+
+mapeBB_0_gebv_ref[i] <- mean(abs(tbv_ref-BB.0$yHat[-tst]))
+mapeBB_0_gebv_tst[i] <- mean(abs(tbv_tar-BB.0$yHat[tst]))
+
+######### BIAS
+
+regBB_0_gebv_refa <- lm(tbv_ref~BB.0$yHat[-tst])
+regBB_0_gebv_refb <- coef(regBB_0_gebv_refa)[-1]
+regBB_0_gebv_ref[i] <- as.numeric(regBB_0_gebv_refb)
+
+regBB_0_gebv_tsta <- lm(tbv_tar~BB.0$yHat[tst])
+regBB_0_gebv_tstb <- coef(regBB_0_gebv_tsta)[-1]
+regBB_0_gebv_tst[i] <- as.numeric(regBB_0_gebv_tstb)
+
+
+################### Bayesian LASSO(Laplace prior)
+
+ETA <- list(list(X=Z, model="BL"))
+BL.0 <- BGLR(y=phenNA, ETA=ETA, nIter=nIteration, burnIn=burnIn, saveAt="BL_")
+##str(BL.0)
+
+######  PEARSON CORRELATION COEFFICIENT
+
+rBL_0_gebv_ref[i] <- cor(tbv_ref,BL.0$yHat[-tst])
+rBL_0_gebv_tst[i] <- cor(tbv_tar,BL.0$yHat[tst])
+
+####### MEAN SQUARED PREDICTION ERROR
+
+mspeBL_0_gebv_ref[i] <- mean((tbv_ref-BL.0$yHat[-tst])^2)
+mspeBL_0_gebv_tst[i] <- mean((tbv_tar-BL.0$yHat[tst])^2)
+
+######## MEAN ABSOLUTE PREDICTION ERROR
+
+mapeBL_0_gebv_ref[i] <- mean(abs(tbv_ref-BL.0$yHat[-tst]))
+mapeBL_0_gebv_tst[i] <- mean(abs(tbv_tar-BL.0$yHat[tst]))
+
+######### BIAS
+
+regBL_0_gebv_refa <- lm(tbv_ref~BL.0$yHat[-tst])
+regBL_0_gebv_refb <- coef(regBL_0_gebv_refa)[-1]
+regBL_0_gebv_ref[i] <- as.numeric(regBL_0_gebv_refb)
+
+regBL_0_gebv_tsta <- lm(tbv_tar~BL.0$yHat[tst])
+regBL_0_gebv_tstb <- coef(regBL_0_gebv_tsta)[-1]
+regBL_0_gebv_tst[i] <- as.numeric(regBL_0_gebv_tstb)
+
+
+################### SUPPORT VECTOR MACHINE
+
+SVM.0 <- svm(x=Z, y=phenNA, type="eps-regression", kernel="radial", cost=1)
+##str(SVM.0)
+
+######  PEARSON CORRELATION COEFFICIENT
+
+rSVM_0_gebv_ref[i] <- cor(tbv_ref,SVM.0$fitted[-tst])
+rSVM_0_gebv_tst[i] <- cor(tbv_tar,SVM.0$fitted[tst])
+
+####### MEAN SQUARED PREDICTION ERROR
+
+mspeSVM_0_gebv_ref[i] <- mean((tbv_ref-SVM.0$fitted[-tst])^2)
+mspeSVM_0_gebv_tst[i] <- mean((tbv_tar-SVM.0$fitted[tst])^2)
+
+######## MEAN ABSOLUTE PREDICTION ERROR
+
+mapeSVM_0_gebv_ref[i] <- mean(abs(tbv_ref-SVM.0$fitted[-tst]))
+mapeSVM_0_gebv_tst[i] <- mean(abs(tbv_tar-SVM.0$fitted[tst]))
+
+######### BIAS
+
+regSVM_0_gebv_refa <- lm(tbv_ref~SVM.0$fitted[-tst])
+regSVM_0_gebv_refb <- coef(regSVM_0_gebv_refa)[-1]
+regSVM_0_gebv_ref[i] <- as.numeric(regSVM_0_gebv_refb)
+
+regSVM_0_gebv_tsta <- lm(tbv_tar~SVM.0$fitted[tst])
+regSVM_0_gebv_tstb <- coef(regSVM_0_gebv_tsta)[-1]
+regSVM_0_gebv_tst[i] <- as.numeric(regSVM_0_gebv_tstb)
+
+
+################## RANDOM FOREST
+
+Zref <- Z[1:1000,]
+Ztar <- Z[1001:2000,]
+dim(Ztar)
+
+phen_ref <- as.vector(phen_ref)
+
+RF.0 <- randomForest(x=Zref, y=phen_ref, ntree=1000, mtry=2000,
+replace=TRUE,coefs=T,sampsize=nrow(Zref),nodesize=10,importance=TRUE)
+print(RF.0)
+str(RF.0)
+
+RF.gebv.0_ref <- predict(RF.0,Zref)
+str(RF.gebv.0_ref)
+RF.gebv.0_tst <- predict(RF.0,Ztar)
+str(RF.gebv.0_tst)
+
+######  PEARSON CORRELATION COEFFICIENT
+
+rRF_0_gebv_ref[i] <- cor(tbv_ref,RF.gebv.0_ref)
+rRF_0_gebv_tst[i] <- cor(tbv_tar,RF.gebv.0_tst)
+
+####### MEAN SQUARED PREDICTION ERROR
+
+mspeRF_0_gebv_ref[i] <- mean((tbv_ref-RF.gebv.0_ref)^2)
+mspeRF_0_gebv_tst[i] <- mean((tbv_tar-RF.gebv.0_tst)^2)
+
+######## MEAN ABSOLUTE PREDICTION ERROR
+
+mapeRF_0_gebv_ref[i] <- mean(abs(tbv_ref-RF.gebv.0_ref))
+mapeRF_0_gebv_tst[i] <- mean(abs(tbv_tar-RF.gebv.0_tst))
+
+######### BIAS
+
+regRF_0_gebv_refa <- lm(tbv_ref~RF.gebv.0_ref)
+regRF_0_gebv_refb <- coef(regRF_0_gebv_refa)[-1]
+regRF_0_gebv_ref[i] <- as.numeric(regRF_0_gebv_refb)
+
+regRF_0_gebv_tsta <- lm(tbv_tar~RF.gebv.0_tst)
+regRF_0_gebv_tstb <- coef(regRF_0_gebv_tsta)[-1]
+regRF_0_gebv_tst[i] <- as.numeric(regRF_0_gebv_tstb)
+
+
+###################### NEURAL NETWORK ###############################################################
+
+ph_ref <- data_ref["phen"]
+ph_tar <- data_tar["phen"]
+ph <- rbind(ph_ref,ph_tar)
+partitions <- c(rep(1,1000),rep(2,1000))
+data <- ph
+data$G <- G
+data$partitions <- partitions
+dim(data)
+
+################### NEURON=1
+
+NN.0 <- brnn(phen~G, data=subset(data,partitions!=2),neurons=2, epochs=35, verbose=TRUE)
+print(NN.0)
+str(NN.0)
+
+NN.gebv.0_ref <- predict(NN.0)
+str(NN.gebv.0_ref)
+
+data_tst <- subset(data,partitions==2)
+dim(data_tst)
+str(data_tst)
+NN.gebv.0_tst <- predict(NN.0,newdata=data_tst)
+str(NN.gebv.0_tst)
+
+######  PEARSON CORRELATION COEFFICIENT
+
+rNN_0_gebv_ref[i] <- cor(tbv_ref,NN.gebv.0_ref)
+rNN_0_gebv_tst[i] <- cor(tbv_tar,NN.gebv.0_tst)
+
+####### MEAN SQUARED PREDICTION ERROR
+
+mspeNN_0_gebv_ref[i] <- mean((tbv_ref-NN.gebv.0_ref)^2)
+mspeNN_0_gebv_tst[i] <- mean((tbv_tar-NN.gebv.0_tst)^2)
+
+######## MEAN ABSOLUTE PREDICTION ERROR
+
+mapeNN_0_gebv_ref[i] <- mean(abs(tbv_ref-NN.gebv.0_ref))
+mapeNN_0_gebv_tst[i] <- mean(abs(tbv_tar-NN.gebv.0_tst))
+
+######### BIAS
+
+regNN_0_gebv_refa <- lm(tbv_ref~NN.gebv.0_ref)
+regNN_0_gebv_refb <- coef(regNN_0_gebv_refa)[-1]
+regNN_0_gebv_ref[i] <- as.numeric(regNN_0_gebv_refb)
+
+regNN_0_gebv_tsta <- lm(tbv_tar~NN.gebv.0_tst)
+regNN_0_gebv_tstb <- coef(regNN_0_gebv_tsta)[-1]
+regNN_0_gebv_tst[i] <- as.numeric(regNN_0_gebv_tstb)
+
+
+}
+
+
+write.table (rGBLUP_0_gebv_tst,file='E:/NN/d2=0/rGBLUP_0_gebv_tst_All.txt',quote=F,row.names=TRUE,col.names=TRUE)
+write.table
+write.table (rBB_0_gebv_tst,file='E:/NN/d2=0/rBB_0_gebv_tst_All.txt',quote=F,row.names=TRUE,col.names=TRUE)
+write.table
+write.table (rBL_0_gebv_tst,file='E:/NN/d2=0/rBL_0_gebv_tst_All.txt',quote=F,row.names=TRUE,col.names=TRUE)
+write.table
+write.table (rSVM_0_gebv_tst,file='E:/NN/d2=0/rSVM_0_gebv_tst_All.txt',quote=F,row.names=TRUE,col.names=TRUE)
+write.table
+write.table (rRF_0_gebv_tst,file='E:/NN/d2=0/rRF_0_gebv_tst_All.txt',quote=F,row.names=TRUE,col.names=TRUE)
+write.table
+write.table (rNN_0_gebv_tst,file='E:/NN/d2=0/rNN_0_gebv_tst_All.txt',quote=F,row.names=TRUE,col.names=TRUE)
+write.table
+
+
+write.table (mspeGBLUP_0_gebv_tst,file='E:/NN/d2=0/mspeGBLUP_0_gebv_tst_All.txt',quote=F,row.names=TRUE,col.names=TRUE)
+write.table
+write.table (mspeBB_0_gebv_tst,file='E:/NN/d2=0/mspeBB_0_gebv_tst_All.txt',quote=F,row.names=TRUE,col.names=TRUE)
+write.table
+write.table (mspeBL_0_gebv_tst,file='E:/NN/d2=0/mspeBL_0_gebv_tst_All.txt',quote=F,row.names=TRUE,col.names=TRUE)
+write.table
+write.table (mspeSVM_0_gebv_tst,file='E:/NN/d2=0/mspeSVM_0_gebv_tst_All.txt',quote=F,row.names=TRUE,col.names=TRUE)
+write.table
+write.table (mspeRF_0_gebv_tst,file='E:/NN/d2=0/mspeRF_0_gebv_tst_All.txt',quote=F,row.names=TRUE,col.names=TRUE)
+write.table
+write.table (mspeNN_0_gebv_tst,file='E:/NN/d2=0/mspeNN_0_gebv_tst_All.txt',quote=F,row.names=TRUE,col.names=TRUE)
+write.table
+
+
+write.table (mapeGBLUP_0_gebv_tst,file='E:/NN/d2=0/mapeGBLUP_0_gebv_tst_All.txt',quote=F,row.names=TRUE,col.names=TRUE)
+write.table
+write.table (mapeBB_0_gebv_tst,file='E:/NN/d2=0/mapeBB_0_gebv_tst_All.txt',quote=F,row.names=TRUE,col.names=TRUE)
+write.table
+write.table (mapeBL_0_gebv_tst,file='E:/NN/d2=0/mapeBL_0_gebv_tst_All.txt',quote=F,row.names=TRUE,col.names=TRUE)
+write.table
+write.table (mapeSVM_0_gebv_tst,file='E:/NN/d2=0/mapeSVM_0_gebv_tst_All.txt',quote=F,row.names=TRUE,col.names=TRUE)
+write.table
+write.table (mapeRF_0_gebv_tst,file='E:/NN/d2=0/mapeRF_0_gebv_tst_All.txt',quote=F,row.names=TRUE,col.names=TRUE)
+write.table
+write.table (mapeNN_0_gebv_tst,file='E:/NN/d2=0/mapeNN_0_gebv_tst_All.txt',quote=F,row.names=TRUE,col.names=TRUE)
+write.table
+
+
+write.table (regGBLUP_0_gebv_tst,file='E:/NN/d2=0/regGBLUP_0_gebv_tst_All.txt',quote=F,row.names=TRUE,col.names=TRUE)
+write.table
+write.table (regBB_0_gebv_tst,file='E:/NN/d2=0/regBB_0_gebv_tst_All.txt',quote=F,row.names=TRUE,col.names=TRUE)
+write.table
+write.table (regBL_0_gebv_tst,file='E:/NN/d2=0/regBL_0_gebv_tst_All.txt',quote=F,row.names=TRUE,col.names=TRUE)
+write.table
+write.table (regSVM_0_gebv_tst,file='E:/NN/d2=0/regSVM_0_gebv_tst_All.txt',quote=F,row.names=TRUE,col.names=TRUE)
+write.table
+write.table (regRF_0_gebv_tst,file='E:/NN/d2=0/regRF_0_gebv_tst_All.txt',quote=F,row.names=TRUE,col.names=TRUE)
+write.table
+write.table (regNN_0_gebv_tst,file='E:/NN/d2=0/regNN_0_gebv_tst_All.txt',quote=F,row.names=TRUE,col.names=TRUE)
+write.table
+
+
+###########################
+
+write.table (rGBLUP_0_gebv_ref,file='E:/NN/d2=0/rGBLUP_0_gebv_ref_All.txt',quote=F,row.names=TRUE,col.names=TRUE)
+write.table
+write.table (rBB_0_gebv_ref,file='E:/NN/d2=0/rBB_0_gebv_ref_All.txt',quote=F,row.names=TRUE,col.names=TRUE)
+write.table
+write.table (rBL_0_gebv_ref,file='E:/NN/d2=0/rBL_0_gebv_ref_All.txt',quote=F,row.names=TRUE,col.names=TRUE)
+write.table
+write.table (rSVM_0_gebv_ref,file='E:/NN/d2=0/rSVM_0_gebv_ref_All.txt',quote=F,row.names=TRUE,col.names=TRUE)
+write.table
+write.table (rRF_0_gebv_ref,file='E:/NN/d2=0/rRF_0_gebv_ref_All.txt',quote=F,row.names=TRUE,col.names=TRUE)
+write.table
+write.table (rNN_0_gebv_ref,file='E:/NN/d2=0/rNN_0_gebv_ref_All.txt',quote=F,row.names=TRUE,col.names=TRUE)
+write.table
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
