@@ -23,7 +23,7 @@ This additive scenario represents the general simulation framework used througho
 Other scenarios, including those with dominance effects, follow the same pipeline but extend the genomic inputs to include additive and dominance genomic relationship matrices. 
 Scripts for these dominance scenarios are available upon request.
 ## Software
-- R version: (please specify)
+- R version: 4.5.1
 - Main packages:
   - xbreed
   - BGLR
